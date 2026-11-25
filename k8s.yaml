@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cryptsetup-benchmark
+spec:
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Delete
+    whenScaled: Delete
+  selector:
+    matchLabels:
+      app: cryptsetup-benchmark
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: cryptsetup-benchmark
+    spec:
+      containers:
+      - name: cryptsetup-benchmark
+        image: burgerdev.azurecr.io/burgerdev/cryptsetup-benchmark:latest
+        imagePullPolicy: Always
+        env:
+        - name: ACK_DESTROY_THIS_DEVICE
+          value: /dev/volume-under-test
+        volumeDevices:
+        - name: d
+          devicePath: /dev/volume-under-test
+        securityContext:
+          privileged: true
+        resources:
+          requests:
+            memory: 8Gi
+            cpu: "4"
+          limits:
+            memory: 8Gi
+            cpu: "4"
+  volumeClaimTemplates:
+  - metadata:
+      name: d
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      volumeMode: Block
+      resources:
+        requests:
+          storage: 1Gi
+
